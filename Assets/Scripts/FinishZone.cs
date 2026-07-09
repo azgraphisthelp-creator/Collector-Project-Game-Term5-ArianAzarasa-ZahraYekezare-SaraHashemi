@@ -77,7 +77,6 @@ public class FinishZone : MonoBehaviour
 
 
 
-        // MOBILE
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
@@ -102,7 +101,6 @@ public class FinishZone : MonoBehaviour
 
 #if UNITY_EDITOR
 
-        // PC
         if(Input.GetKeyDown(KeyCode.Space))
         {
             SendBall();
@@ -156,11 +154,9 @@ public class FinishZone : MonoBehaviour
 
 
 
-        // حذف از استک بازیکن
         LevelManager.Instance.collectedBalls.Remove(ball);
 
 
-        // امتیاز توپ آخر
         ScoreManager.Instance.AddScore(10);
 
 
@@ -232,7 +228,6 @@ public class FinishZone : MonoBehaviour
 
 
 
-                // آخرین توپ رسید
                 if(finishedBalls >= ballsToSend.Count)
                 {
                     PlayFinishEffect();

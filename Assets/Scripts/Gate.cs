@@ -27,7 +27,6 @@ public class Gate : MonoBehaviour
     private int currentProgress = 0;
     private bool activated = false;
 
-    //================ INIT =================//
 
     public void Setup(int required, int spawn, Transform center, Transform deposit)
     {
@@ -42,7 +41,6 @@ public class Gate : MonoBehaviour
         UpdateText();
     }
 
-    //================ PROGRESS =================//
 
     public void AddProgress()
     {
@@ -69,7 +67,6 @@ public class Gate : MonoBehaviour
             text.transform.forward = Camera.main.transform.forward;
     }
 
-    //================ SPAWN POINT =================//
 
     public Vector3 GetRandomSpawnPoint()
     {
@@ -85,7 +82,6 @@ public class Gate : MonoBehaviour
         );
     }
 
-    //================ TRIGGER =================//
 
     private void OnTriggerEnter(Collider other)
     {
@@ -97,24 +93,20 @@ public class Gate : MonoBehaviour
         if (LevelManager.Instance == null)
             return;
 
-        // ❗ چک تعداد توپ‌ها
         if (LevelManager.Instance.GetBallCount() < requiredBalls)
         {
             LevelManager.Instance.LoseFromGate();
             return;
         }
 
-        // FX
         if (confettiFX != null && depositPoint != null)
         {
             confettiFX.transform.position = depositPoint.position;
             confettiFX.Play();
         }
 
-        // شروع گیت
         LevelManager.Instance.StartGate(requiredBalls, depositPoint);
 
-        // حذف این گیت از لیست اسپاونر
         if (spawner != null)
             spawner.GatePassed(this);
     }

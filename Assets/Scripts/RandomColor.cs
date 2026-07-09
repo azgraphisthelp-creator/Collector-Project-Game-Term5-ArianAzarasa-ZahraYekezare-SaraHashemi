@@ -17,9 +17,9 @@ public class RandomColor : MonoBehaviour
         if (targetRenderer == null) return;
 
         Color brightColor = Random.ColorHSV(
-            0f, 1f,     // Hue
-            0.6f, 1f,   // Saturation (شاد)
-            0.8f, 1f    // Value (روشن)
+            0f, 1f,     
+            0.6f, 1f,   
+            0.8f, 1f    
         );
 
         targetRenderer.material.color = brightColor;

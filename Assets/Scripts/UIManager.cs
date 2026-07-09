@@ -48,9 +48,7 @@ private void Update()
         Instance = this;
     }
 
-    // =========================
-    // UI TEXT
-    // =========================
+
     public void SetBallText(int count)
     {
         if (ballText != null)
@@ -69,17 +67,13 @@ private void Update()
             progressSlider.value = value;
     }
 
-    // =========================
-    // INPUT CONTROL
-    // =========================
+   
     public bool CanInput()
     {
         return !isPaused;
     }
 
-    // =========================
-    // PAUSE SYSTEM
-    // =========================
+
     public void TogglePause()
     {
         if (isPaused)
@@ -110,9 +104,7 @@ private void Update()
         SetUIInput(true);
     }
 
-    // =========================
-    // LOSE
-    // =========================
+ 
     public void ShowLosePanel()
     {
         if (losePanel != null)
@@ -124,9 +116,7 @@ private void Update()
         SetUIInput(false);
     }
 
-    // =========================
-    // UI LOCK CORE
-    // =========================
+
     private void SetUIInput(bool enabled)
     {
         if (uiCanvas != null)

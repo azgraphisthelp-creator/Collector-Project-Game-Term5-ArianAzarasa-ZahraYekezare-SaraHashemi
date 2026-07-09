@@ -135,7 +135,6 @@ public class LevelManager : MonoBehaviour
 {
     RefreshStack();
 }
-        // ================= FIRST GATE =================
 
     void SpawnFirstGate()
     {
@@ -154,7 +153,6 @@ public class LevelManager : MonoBehaviour
 
         gate.spawner = this;
 
-        // فقط اطلاعات گیت را ست می‌کنیم
         gate.Setup(
             data.requiredBalls,
             data.spawnCount,
@@ -170,7 +168,6 @@ public class LevelManager : MonoBehaviour
         nextGateIndex++;
     }
 
-    // ================= NEXT GATE =================
 
     public void SpawnNextGate()
     {
@@ -207,7 +204,6 @@ public class LevelManager : MonoBehaviour
         nextGateIndex++;
     }
 
-    // ================= SPAWN BALLS =================
 
     void SpawnBallsForGate(Gate gate)
     {
@@ -223,7 +219,6 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    // ================= GATE DESTROY =================
 
     public void GatePassed(Gate gate)
     {
@@ -247,7 +242,6 @@ public class LevelManager : MonoBehaviour
 
         nextGateSpawned = false;
     }
-        // ================= START GATE =================
 
     public void StartGate(int required, Transform target)
     {
@@ -295,7 +289,6 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    // ================= BALL DEPOSIT =================
 
     public void BallDeposited(Ball ball)
     {
@@ -313,7 +306,6 @@ public class LevelManager : MonoBehaviour
 
         depositedBalls++;
 
-        // مرتب شدن استک بعد از حذف توپ
         RefreshStack();
 
         UIManager.Instance.SetBallText(collectedBalls.Count);
@@ -328,7 +320,6 @@ public class LevelManager : MonoBehaviour
             StartCoroutine(FinishGateRoutine());
         }
     }
-        // ================= FINISH GATE =================
 
     IEnumerator FinishGateRoutine()
     {
@@ -351,7 +342,6 @@ public class LevelManager : MonoBehaviour
         StartCoroutine(EarlySpawnNextGate());
     }
 
-    // ================= NEXT GATE EARLY SPAWN =================
 
     IEnumerator EarlySpawnNextGate()
     {
@@ -360,7 +350,6 @@ public class LevelManager : MonoBehaviour
         SpawnNextGate();
     }
 
-    // ================= LOSE =================
 
     public void LoseFromGate()
     {
@@ -380,7 +369,6 @@ public class LevelManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    // ================= UI =================
 
    public void Retry()
 {

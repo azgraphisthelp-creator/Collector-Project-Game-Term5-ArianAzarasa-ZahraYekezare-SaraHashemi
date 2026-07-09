@@ -54,22 +54,18 @@ public class Ball : MonoBehaviour
 {
     if (rb == null) return;
 
-    // ================= DEPOSIT =================
     if (isDepositing)
     {
         Vector3 dir = depositTarget - rb.position;
         float dist = dir.magnitude;
 
-        // نزدیک مقصد سرعت کمتر شود
         float force = dist < 1.5f ? 10f : 20f;
 
         rb.AddForce(dir.normalized * force, ForceMode.Acceleration);
 
-        // محدود کردن سرعت
         if (rb.velocity.magnitude > 10f)
             rb.velocity = rb.velocity.normalized * 10f;
 
-        // وقتی نزدیک شد کاملاً متوقف شود
         if (dist < 0.4f && !arrived)
         {
             arrived = true;
@@ -87,7 +83,6 @@ public class Ball : MonoBehaviour
         return;
     }
 
-    // ================= STACK =================
     if (!IsCollected) return;
 
     Vector3 target = LevelManager.Instance.GetBallPosition(stackIndex);
@@ -95,7 +90,6 @@ public class Ball : MonoBehaviour
 
     rb.AddForce(dir2 * 40f, ForceMode.Acceleration);
 
-    // محدود کردن سرعت استک
     if (rb.velocity.magnitude > 8f)
         rb.velocity = rb.velocity.normalized * 8f;
 }
