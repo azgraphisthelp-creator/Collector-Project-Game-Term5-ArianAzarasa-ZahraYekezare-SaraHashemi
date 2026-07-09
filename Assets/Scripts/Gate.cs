@@ -7,7 +7,7 @@ public class Gate : MonoBehaviour
     [Header("Gate Settings")]
     public int requiredBalls = 3;
 
-    [Header("Spawn Settings (SET BY LEVEL MANAGER)")]
+    [Header("Spawn Settings")]
     public Transform spawnCenter;
     public Vector3 spawnSize = new Vector3(15f, 0f, 30f);
     public int spawnCount = 20;
@@ -24,8 +24,10 @@ public class Gate : MonoBehaviour
 
     [HideInInspector] public LevelManager spawner;
 
-    private int currentProgress;
-    private bool activated;
+    private int currentProgress = 0;
+    private bool activated = false;
+
+    //================ INIT =================//
 
     public void Setup(int required, int spawn, Transform center, Transform deposit)
     {
@@ -40,11 +42,11 @@ public class Gate : MonoBehaviour
         UpdateText();
     }
 
+    //================ PROGRESS =================//
+
     public void AddProgress()
     {
-        if (currentProgress >= requiredBalls) return;
-
-        currentProgress++;
+        currentProgress = Mathf.Min(currentProgress + 1, requiredBalls);
         UpdateText();
 
         if (textTransform != null)
@@ -58,7 +60,7 @@ public class Gate : MonoBehaviour
     private void UpdateText()
     {
         if (text != null)
-            text.text = currentProgress + " / " + requiredBalls;
+            text.text = $"{currentProgress} / {requiredBalls}";
     }
 
     private void LateUpdate()
@@ -66,6 +68,8 @@ public class Gate : MonoBehaviour
         if (text != null && Camera.main != null)
             text.transform.forward = Camera.main.transform.forward;
     }
+
+    //================ SPAWN POINT =================//
 
     public Vector3 GetRandomSpawnPoint()
     {
@@ -81,6 +85,8 @@ public class Gate : MonoBehaviour
         );
     }
 
+    //================ TRIGGER =================//
+
     private void OnTriggerEnter(Collider other)
     {
         if (activated) return;
@@ -88,20 +94,27 @@ public class Gate : MonoBehaviour
 
         activated = true;
 
+        if (LevelManager.Instance == null)
+            return;
+
+        // ❗ چک تعداد توپ‌ها
         if (LevelManager.Instance.GetBallCount() < requiredBalls)
         {
             LevelManager.Instance.LoseFromGate();
             return;
         }
 
+        // FX
         if (confettiFX != null && depositPoint != null)
         {
             confettiFX.transform.position = depositPoint.position;
             confettiFX.Play();
         }
 
+        // شروع گیت
         LevelManager.Instance.StartGate(requiredBalls, depositPoint);
 
+        // حذف این گیت از لیست اسپاونر
         if (spawner != null)
             spawner.GatePassed(this);
     }

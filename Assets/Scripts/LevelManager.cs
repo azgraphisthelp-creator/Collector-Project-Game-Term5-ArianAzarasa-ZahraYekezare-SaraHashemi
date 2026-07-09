@@ -14,9 +14,11 @@ public class LevelManager : MonoBehaviour
 
     [Header("Player")]
     [SerializeField] private PlayerMovement playerMovement;
+
+    [Header("Stack")]
     public Transform stackPoint;
 
-    [Header("Gate Settings (PER LEVEL)")]
+    [Header("Gate Settings")]
     [SerializeField] private Gate gatePrefab;
     [SerializeField] private Transform[] gateSpawnPoints;
 
@@ -30,31 +32,30 @@ public class LevelManager : MonoBehaviour
 
     [SerializeField] private GateData[] gates;
 
+    [Header("Ball")]
+    [SerializeField] private Ball ballPrefab;
+
     [Header("Timing")]
     [SerializeField] private float destroyDelay = 10f;
     [SerializeField] private float nextGateEarlySpawnTime = 2f;
 
     private Queue<Gate> activeGates = new Queue<Gate>();
     private Gate currentGate;
-    private int nextGateIndex;
 
-    [Header("Ball")]
-    [SerializeField] private Ball ballPrefab;
+    private int nextGateIndex;
 
     public List<Ball> collectedBalls = new List<Ball>();
     private List<Ball> ballsToDeposit = new List<Ball>();
 
     private Transform depositPoint;
+
     private bool gateRunning;
+    private bool nextGateSpawned;
 
     private int requiredBalls;
     private int depositedBalls;
 
-    private bool nextGateSpawned;
-
     private Coroutine gateRoutine;
-
-    //================ INIT =================//
 
     private void Awake()
     {
@@ -63,6 +64,7 @@ public class LevelManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
     }
 
@@ -72,23 +74,21 @@ public class LevelManager : MonoBehaviour
         SwitchToGameplayCamera();
     }
 
-    //================ CAMERA =================//
-
-    private void SwitchToGameplayCamera()
+    void SwitchToGameplayCamera()
     {
-        endCamera.SetActive(false);
         gameplayCamera.SetActive(true);
+        endCamera.SetActive(false);
+
         cameraFollow.StartFollow();
     }
 
-    private void SwitchToEndCamera()
+    void SwitchToEndCamera()
     {
         gameplayCamera.SetActive(false);
         endCamera.SetActive(true);
+
         cameraFollow.StopFollow();
     }
-
-    //================ BALL STACK =================//
 
     public void AddBall(Ball ball)
     {
@@ -96,17 +96,22 @@ public class LevelManager : MonoBehaviour
         if (collectedBalls.Contains(ball)) return;
 
         collectedBalls.Add(ball);
-        ball.SetStackIndex(collectedBalls.Count - 1);
+
+        RefreshStack();
 
         UIManager.Instance.SetBallText(collectedBalls.Count);
     }
 
-    public int GetBallCount() => collectedBalls.Count;
+    public int GetBallCount()
+    {
+        return collectedBalls.Count;
+    }
 
     public Vector3 GetBallPosition(int index)
     {
-        float spacingX = .7f;
-        float spacingZ = .7f;
+        float spacingX = 0.7f;
+        float spacingZ = 0.7f;
+
         int rowSize = 3;
 
         int row = index / rowSize;
@@ -118,58 +123,46 @@ public class LevelManager : MonoBehaviour
         return stackPoint.position + new Vector3(x, 0, z);
     }
 
-    //================ FIRST GATE =================//
-
-    private void SpawnFirstGate()
+    void RefreshStack()
     {
-        if (gates.Length == 0) return;
+        for (int i = 0; i < collectedBalls.Count; i++)
+        {
+            if (collectedBalls[i] != null)
+                collectedBalls[i].SetStackIndex(i);
+        }
+    }
+    public void RefreshStackPublic()
+{
+    RefreshStack();
+}
+        // ================= FIRST GATE =================
+
+    void SpawnFirstGate()
+    {
+        if (gates.Length == 0)
+            return;
 
         nextGateIndex = 0;
 
-        GateData data = gates[0];
-        Transform point = gateSpawnPoints[0];
-
-        Gate gate = Instantiate(gatePrefab, point.position, point.rotation);
-
-        gate.spawner = this;
-        gate.Setup(
-            data.requiredBalls,
-            data.spawnCount,
-            data.spawnCenter,
-            point
-        );
-
-        currentGate = gate;
-        activeGates.Enqueue(gate);
-
-        SpawnBallsForGate(gate);
-
-        nextGateIndex = 1;
-    }
-
-    //================ NEXT GATE =================//
-
-    public void SpawnNextGate()
-    {
-        if (nextGateSpawned) return;
-        if (nextGateIndex >= gates.Length) return;
-
-        nextGateSpawned = true;
-
         GateData data = gates[nextGateIndex];
-        Transform point = gateSpawnPoints[nextGateIndex];
+        Transform spawn = gateSpawnPoints[nextGateIndex];
 
-        Gate gate = Instantiate(gatePrefab, point.position, point.rotation);
+        Gate gate = Instantiate(
+            gatePrefab,
+            spawn.position,
+            spawn.rotation);
 
         gate.spawner = this;
+
+        // فقط اطلاعات گیت را ست می‌کنیم
         gate.Setup(
             data.requiredBalls,
             data.spawnCount,
             data.spawnCenter,
-            point
-        );
+            gate.depositPoint);
 
         currentGate = gate;
+
         activeGates.Enqueue(gate);
 
         SpawnBallsForGate(gate);
@@ -177,40 +170,67 @@ public class LevelManager : MonoBehaviour
         nextGateIndex++;
     }
 
-    private IEnumerator EarlySpawnNextGate()
+    // ================= NEXT GATE =================
+
+    public void SpawnNextGate()
     {
-        yield return new WaitForSeconds(nextGateEarlySpawnTime);
-        SpawnNextGate();
+        if (nextGateSpawned)
+            return;
+
+        if (nextGateIndex >= gates.Length)
+            return;
+
+        nextGateSpawned = true;
+
+        GateData data = gates[nextGateIndex];
+        Transform spawn = gateSpawnPoints[nextGateIndex];
+
+        Gate gate = Instantiate(
+            gatePrefab,
+            spawn.position,
+            spawn.rotation);
+
+        gate.spawner = this;
+
+        gate.Setup(
+            data.requiredBalls,
+            data.spawnCount,
+            data.spawnCenter,
+            gate.depositPoint);
+
+        currentGate = gate;
+
+        activeGates.Enqueue(gate);
+
+        SpawnBallsForGate(gate);
+
+        nextGateIndex++;
     }
 
-    //================ BALL SPAWN =================//
+    // ================= SPAWN BALLS =================
 
-    private void SpawnBallsForGate(Gate gate)
+    void SpawnBallsForGate(Gate gate)
     {
         if (gate.spawnCenter == null)
-        {
-            Debug.LogWarning("SpawnCenter is NULL on Gate!");
             return;
-        }
 
         for (int i = 0; i < gate.spawnCount; i++)
         {
             Instantiate(
                 ballPrefab,
                 gate.GetRandomSpawnPoint(),
-                Quaternion.identity
-            );
+                Quaternion.identity);
         }
     }
 
-    //================ GATE FLOW =================//
+    // ================= GATE DESTROY =================
 
     public void GatePassed(Gate gate)
     {
         StartCoroutine(DestroyGateRoutine(gate));
     }
 
-    private IEnumerator DestroyGateRoutine(Gate gate)
+    IEnumerator DestroyGateRoutine(Gate gate)
     {
         yield return new WaitForSeconds(destroyDelay);
 
@@ -227,12 +247,12 @@ public class LevelManager : MonoBehaviour
 
         nextGateSpawned = false;
     }
-
-    //================ START GATE =================//
+        // ================= START GATE =================
 
     public void StartGate(int required, Transform target)
     {
-        if (gateRunning) return;
+        if (gateRunning)
+            return;
 
         gateRunning = true;
 
@@ -240,14 +260,18 @@ public class LevelManager : MonoBehaviour
         depositedBalls = 0;
 
         depositPoint = target;
+
         ballsToDeposit.Clear();
 
-        int count = Mathf.Min(required, collectedBalls.Count);
+        int count = Mathf.Min(requiredBalls, collectedBalls.Count);
 
         for (int i = 0; i < count; i++)
+        {
             ballsToDeposit.Add(collectedBalls[i]);
+        }
 
         playerMovement.StopMovement();
+
         SwitchToEndCamera();
 
         if (gateRoutine != null)
@@ -256,24 +280,30 @@ public class LevelManager : MonoBehaviour
         gateRoutine = StartCoroutine(SendBallsRoutine());
     }
 
-    private IEnumerator SendBallsRoutine()
+    IEnumerator SendBallsRoutine()
     {
         List<Ball> snapshot = new List<Ball>(ballsToDeposit);
 
-        for (int i = 0; i < snapshot.Count; i++)
+        foreach (Ball ball in snapshot)
         {
-            if (snapshot[i] != null)
-                snapshot[i].GoToDeposit(depositPoint.position);
+            if (ball == null)
+                continue;
+
+            ball.GoToDeposit(depositPoint.position);
 
             yield return new WaitForSeconds(0.08f);
         }
     }
 
-    //================ BALL DEPOSIT =================//
+    // ================= BALL DEPOSIT =================
 
     public void BallDeposited(Ball ball)
     {
-        if (!gateRunning) return;
+        if (!gateRunning)
+            return;
+
+        if (ball == null)
+            return;
 
         if (ballsToDeposit.Contains(ball))
             ballsToDeposit.Remove(ball);
@@ -283,20 +313,24 @@ public class LevelManager : MonoBehaviour
 
         depositedBalls++;
 
-        ball.gameObject.SetActive(false);
+        // مرتب شدن استک بعد از حذف توپ
+        RefreshStack();
 
         UIManager.Instance.SetBallText(collectedBalls.Count);
 
         if (currentGate != null)
             currentGate.AddProgress();
 
-        if (ballsToDeposit.Count <= 0)
+        ball.gameObject.SetActive(false);
+
+        if (depositedBalls >= requiredBalls)
+        {
             StartCoroutine(FinishGateRoutine());
+        }
     }
+        // ================= FINISH GATE =================
 
-    //================ FIXED FLOW =================//
-
-    private IEnumerator FinishGateRoutine()
+    IEnumerator FinishGateRoutine()
     {
         yield return new WaitForSeconds(0.3f);
 
@@ -311,13 +345,22 @@ public class LevelManager : MonoBehaviour
             LoseFromGate();
             yield break;
         }
-
+        ScoreManager.Instance.AddScore(requiredBalls);
         SwitchToGameplayCamera();
 
         StartCoroutine(EarlySpawnNextGate());
     }
 
-    //================ LOSE FIXED =================//
+    // ================= NEXT GATE EARLY SPAWN =================
+
+    IEnumerator EarlySpawnNextGate()
+    {
+        yield return new WaitForSeconds(nextGateEarlySpawnTime);
+
+        SpawnNextGate();
+    }
+
+    // ================= LOSE =================
 
     public void LoseFromGate()
     {
@@ -337,13 +380,20 @@ public class LevelManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    //================ UI =================//
+    // ================= UI =================
 
-    public void Retry()
-    {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
+   public void Retry()
+{
+    StartCoroutine(RetryRoutine());
+}
+
+private IEnumerator RetryRoutine()
+{
+    yield return new WaitForSecondsRealtime(0.15f);
+
+    Time.timeScale = 1f;
+    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+}
 
     public void NextLevel()
     {

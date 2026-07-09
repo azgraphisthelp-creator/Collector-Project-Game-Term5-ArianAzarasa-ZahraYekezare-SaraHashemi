@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-
+using System.Collections;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
@@ -23,7 +23,20 @@ public class UIManager : MonoBehaviour
     [SerializeField] private EventSystem eventSystem;
 
     private bool isPaused;
-
+private void Update()
+{
+    if (Input.GetKeyDown(KeyCode.Escape))
+    {
+        if (!isPaused)
+        {
+            PauseGame();
+        }
+        else
+        {
+            ResumeGame();
+        }
+    }
+}
     private void Awake()
     {
         if (Instance != null)
@@ -126,9 +139,16 @@ public class UIManager : MonoBehaviour
         if (eventSystem != null)
             eventSystem.enabled = enabled;
     }
-    public void QuitGame()
+   public void QuitGame()
 {
-    Time.timeScale = 1f; // مهم: ریست زمان
+    StartCoroutine(QuitRoutine());
+}
+
+private IEnumerator QuitRoutine()
+{
+    yield return new WaitForSecondsRealtime(0.15f);
+
+    Time.timeScale = 1f;
 
 #if UNITY_EDITOR
     UnityEditor.EditorApplication.isPlaying = false;

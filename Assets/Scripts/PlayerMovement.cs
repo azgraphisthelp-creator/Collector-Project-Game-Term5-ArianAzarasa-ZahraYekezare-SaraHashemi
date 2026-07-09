@@ -9,34 +9,56 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float horizontalSpeed = 10f;
     [SerializeField] private float horizontalLimit = 3f;
 
+    [Header("Level Progress")]
     [SerializeField] private Transform startPoint;
     [SerializeField] private Transform finishPoint;
+
+    [Header("Start Game")]
+    [SerializeField] private GameObject swipeUI;
+
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
 
     private float fingerOffsetX;
     private bool isDragging;
 
     private bool canMove = true;
+    private bool gameStarted = false;
 
-    void Update()
+    private void Start()
+    {
+        gameStarted = false;
+
+        if (swipeUI != null)
+            swipeUI.SetActive(true);
+
+        if (animator != null)
+            animator.SetBool("IsRunning", false);
+    }
+
+    private void Update()
     {
         if (!canMove)
             return;
 
-        // ⭐ IMPORTANT: UI PAUSE CHECK
         if (UIManager.Instance != null && !UIManager.Instance.CanInput())
             return;
 
-        MoveForward();
         HandleInput();
+
+        if (!gameStarted)
+            return;
+
+        MoveForward();
         UpdateProgress();
     }
 
-    void MoveForward()
+    private void MoveForward()
     {
         transform.Translate(Vector3.forward * forwardSpeed * Time.deltaTime);
     }
 
-    void HandleInput()
+    private void HandleInput()
     {
 #if UNITY_EDITOR
         HandleMouse();
@@ -45,7 +67,7 @@ public class PlayerMovement : MonoBehaviour
 #endif
     }
 
-    void HandleMouse()
+    private void HandleMouse()
     {
         if (Input.GetMouseButtonDown(0))
         {
@@ -61,13 +83,19 @@ public class PlayerMovement : MonoBehaviour
         if (isDragging)
         {
             float delta = (Input.mousePosition.x - fingerOffsetX) / Screen.width;
+
+            if (!gameStarted && Mathf.Abs(delta) > 0.005f)
+            {
+                StartGame();
+            }
+
             MoveHorizontal(delta);
 
             fingerOffsetX = Input.mousePosition.x;
         }
     }
 
-    void HandleTouch()
+    private void HandleTouch()
     {
         if (Input.touchCount == 0)
             return;
@@ -82,18 +110,34 @@ public class PlayerMovement : MonoBehaviour
         if (touch.phase == TouchPhase.Moved)
         {
             float delta = (touch.position.x - fingerOffsetX) / Screen.width;
+
+            if (!gameStarted && Mathf.Abs(delta) > 0.005f)
+            {
+                StartGame();
+            }
+
             MoveHorizontal(delta);
 
             fingerOffsetX = touch.position.x;
         }
     }
 
-    void MoveHorizontal(float delta)
+    private void StartGame()
+    {
+        gameStarted = true;
+
+        if (swipeUI != null)
+            swipeUI.SetActive(false);
+
+        if (animator != null)
+            animator.SetBool("IsRunning", true);
+    }
+
+    private void MoveHorizontal(float delta)
     {
         Vector3 pos = transform.position;
 
         pos.x += delta * horizontalSpeed;
-
         pos.x = Mathf.Clamp(pos.x, -horizontalLimit, horizontalLimit);
 
         transform.position = pos;
@@ -102,20 +146,30 @@ public class PlayerMovement : MonoBehaviour
     public void StopMovement()
     {
         canMove = false;
+
+        if (animator != null)
+            animator.SetBool("IsRunning", false);
     }
 
     public void ResumeMovement()
     {
         canMove = true;
+
+        if (gameStarted && animator != null)
+            animator.SetBool("IsRunning", true);
     }
 
-    void UpdateProgress()
+    private void UpdateProgress()
     {
+        if (startPoint == null || finishPoint == null)
+            return;
+
         float distanceTravelled = transform.position.z - startPoint.position.z;
         float totalDistance = finishPoint.position.z - startPoint.position.z;
 
         float progress = Mathf.Clamp01(distanceTravelled / totalDistance);
 
-        UIManager.Instance.UpdateProgress(progress);
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateProgress(progress);
     }
 }

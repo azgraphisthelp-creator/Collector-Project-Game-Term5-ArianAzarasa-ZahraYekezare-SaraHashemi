@@ -12,15 +12,11 @@ public class Ball : MonoBehaviour
     private bool isDepositing;
     private Vector3 depositTarget;
 
-    private bool deposited;
+    private bool arrived;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-
-        if (rb == null)
-            rb = GetComponentInParent<Rigidbody>();
-
         rend = GetComponentInChildren<Renderer>();
 
         SetRandomColor();
@@ -28,14 +24,9 @@ public class Ball : MonoBehaviour
 
     private void SetRandomColor()
     {
-        if (rend == null)
-            return;
+        if (rend == null) return;
 
-        rend.material.color = Random.ColorHSV(
-            0f, 1f,
-            0.6f, 1f,
-            0.8f, 1f
-        );
+        rend.material.color = Random.ColorHSV();
     }
 
     public void SetStackIndex(int index)
@@ -45,53 +36,67 @@ public class Ball : MonoBehaviour
 
     public void GoToDeposit(Vector3 target)
     {
-        deposited = false;
         isDepositing = true;
+        depositTarget = target;
 
         IsCollected = false;
+        arrived = false;
 
-        depositTarget = target;
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.useGravity = false;
+        }
     }
 
-    private void FixedUpdate()
+ private void FixedUpdate()
+{
+    if (rb == null) return;
+
+    // ================= DEPOSIT =================
+    if (isDepositing)
     {
-        if (rb == null)
-            return;
+        Vector3 dir = depositTarget - rb.position;
+        float dist = dir.magnitude;
 
-        //---------------- Deposit ----------------
+        // نزدیک مقصد سرعت کمتر شود
+        float force = dist < 1.5f ? 10f : 20f;
 
-        if (isDepositing)
+        rb.AddForce(dir.normalized * force, ForceMode.Acceleration);
+
+        // محدود کردن سرعت
+        if (rb.velocity.magnitude > 10f)
+            rb.velocity = rb.velocity.normalized * 10f;
+
+        // وقتی نزدیک شد کاملاً متوقف شود
+        if (dist < 0.4f && !arrived)
         {
-            Vector3 dir = depositTarget - rb.position;
+            arrived = true;
+            isDepositing = false;
 
-            if (dir.sqrMagnitude > 0.0001f)
-                rb.velocity = dir.normalized * 10f;
+            rb.position = depositTarget;
 
-            if (!deposited && dir.magnitude < 0.25f)
-            {
-                deposited = true;
-                isDepositing = false;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.useGravity = true;
 
-                rb.velocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-
-                LevelManager.Instance.BallDeposited(this);
-            }
-
-            return;
+            LevelManager.Instance.BallDeposited(this);
         }
 
-        //---------------- Stack ----------------
-
-        if (!IsCollected)
-            return;
-
-        Vector3 target =
-            LevelManager.Instance.GetBallPosition(stackIndex);
-
-        Vector3 force =
-            (target - rb.position) * 40f;
-
-        rb.AddForce(force, ForceMode.Acceleration);
+        return;
     }
+
+    // ================= STACK =================
+    if (!IsCollected) return;
+
+    Vector3 target = LevelManager.Instance.GetBallPosition(stackIndex);
+    Vector3 dir2 = target - rb.position;
+
+    rb.AddForce(dir2 * 40f, ForceMode.Acceleration);
+
+    // محدود کردن سرعت استک
+    if (rb.velocity.magnitude > 8f)
+        rb.velocity = rb.velocity.normalized * 8f;
+}
 }
