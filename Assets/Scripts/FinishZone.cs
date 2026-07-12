@@ -268,7 +268,6 @@ if(rb != null)
         );
 
 
-        // حذف کامل توپ
         Destroy(ball.gameObject);
         
 

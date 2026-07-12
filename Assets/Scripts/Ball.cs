@@ -16,7 +16,6 @@ public class Ball : MonoBehaviour
     [SerializeField] private float stackMoveSpeed = 18f;
     [SerializeField] private float rotationDamping = 10f;
 
-
     [Header("Deposit Movement")]
     [SerializeField] private float depositSpeed = 15f;
 
@@ -59,7 +58,6 @@ public class Ball : MonoBehaviour
 
 
 
-    // وقتی توپ وارد صف بازیکن می‌شود
     public void EnterStackMode()
     {
         IsCollected = true;
@@ -81,7 +79,6 @@ public class Ball : MonoBehaviour
 
 
 
-    // شروع حرکت به سمت گیت
     public void GoToDeposit(Vector3 target)
     {
         isDepositing = true;
@@ -119,7 +116,6 @@ public class Ball : MonoBehaviour
 
 
 
-        // حرکت به سمت Deposit
         if(isDepositing)
         {
 
@@ -171,7 +167,6 @@ public class Ball : MonoBehaviour
 
 
 
-        // حرکت نرم در Stack
         if(IsCollected)
         {
 

@@ -269,7 +269,6 @@ private IEnumerator SetNextProgressGate()
             g.transform.position.z - playerTransform.position.z;
 
 
-        // انتخاب نزدیک ترین گیت جلوتر
         if (distance > 0 && distance < gateDistance + 30f)
         {
             if (distance < closestDistance)
@@ -814,7 +813,6 @@ private void UpdateProgressBar()
     }
 
 
-    // وقتی به 130 رسید دوباره صفر شود
     if(distance >= progressDistance)
     {
         progressStartZ = playerTransform.position.z;
