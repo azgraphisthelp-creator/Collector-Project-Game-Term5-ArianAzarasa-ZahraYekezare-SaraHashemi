@@ -184,8 +184,16 @@ IEnumerator SendBallRoutine()
     currentBallIndex++;
 
 
-    Ball ball = ballsToSend[index];
-    Rigidbody rb = ball.GetComponent<Rigidbody>();
+   Ball ball = ballsToSend[index];
+
+if (ball == null)
+{
+    sendingBall = false;
+    yield break;
+}
+
+
+Rigidbody rb = ball.GetComponent<Rigidbody>();
 
 if(rb != null)
 {
@@ -193,12 +201,6 @@ if(rb != null)
     rb.angularVelocity = Vector3.zero;
     rb.isKinematic = true;
 }
-
-    if (ball == null)
-    {
-        sendingBall = false;
-        yield break;
-    }
 
 
 
@@ -242,78 +244,55 @@ if(rb != null)
 
 
 
-    ball.transform
-        .DOMove(
-            targetPosition,
-            0.5f
-        )
-        .SetEase(Ease.OutBack)
-        .OnComplete(() =>
+  ball.transform
+    .DOMove(
+        targetPosition,
+        0.5f
+    )
+    .SetEase(Ease.OutQuad)
+    .OnComplete(() =>
+    {
+        finishedBalls++;
+
+        if (ScoreManager.Instance != null)
         {
-            ball.transform.SetParent(targetPoint);
-
-            ball.transform.position = targetPosition;
-
+            ScoreManager.Instance.AddScore(10);
+        }
 
 
-            if(trail != null)
+        Debug.Log(
+            "FINISHED BALL : "
+            + finishedBalls
+            + "/" 
+            + ballsToSend.Count
+        );
+
+
+        // حذف کامل توپ
+        Destroy(ball.gameObject);
+        
+
+
+        if(finishedBalls >= ballsToSend.Count)
+        {
+            Debug.Log("ALL FINISH BALLS ARRIVED");
+
+
+            LevelManager.Instance.RefreshStackPublic();
+
+
+            if(UIManager.Instance != null)
             {
-                StartCoroutine(
-                    DisableTrail(trail)
+                UIManager.Instance.SetBallText(
+                    LevelManager.Instance.GetBallCount()
                 );
             }
 
 
+            PlayFinishEffect();
+        }
 
-            finishedBalls++;
-
-
-            if (ScoreManager.Instance != null)
-            {
-                ScoreManager.Instance.AddScore(10);
-            }
-
-
-
-            Debug.Log(
-                "FINISHED BALL : "
-                + finishedBalls
-                + "/" 
-                + ballsToSend.Count
-            );
-
-
-
-            // کوچک شدن و حذف توپ
-            ball.transform
-            .DOScale(Vector3.zero, 0.2f)
-            .SetEase(Ease.InBack);
-
-            Destroy(ball.gameObject, 0.25f);
-
-
-
-            if(finishedBalls >= ballsToSend.Count)
-            {
-                Debug.Log("ALL FINISH BALLS ARRIVED");
-
-
-                LevelManager.Instance.RefreshStackPublic();
-
-
-                if(UIManager.Instance != null)
-                {
-                    UIManager.Instance.SetBallText(
-                        LevelManager.Instance.GetBallCount()
-                    );
-                }
-
-
-                PlayFinishEffect();
-            }
-
-        });
-
+    });
 
 
     yield return null;
