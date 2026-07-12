@@ -179,31 +179,43 @@ IEnumerator SendBallRoutine()
 {
     if(currentBallIndex >= ballsToSend.Count)
         yield break;
+
     int index = currentBallIndex;
     currentBallIndex++;
 
 
     Ball ball = ballsToSend[index];
+    Rigidbody rb = ball.GetComponent<Rigidbody>();
 
+if(rb != null)
+{
+    rb.velocity = Vector3.zero;
+    rb.angularVelocity = Vector3.zero;
+    rb.isKinematic = true;
+}
 
     if (ball == null)
-{
-    sendingBall = false;
-    yield break;
-}
+    {
+        sendingBall = false;
+        yield break;
+    }
 
 
 
     ball.EnterFinishMode();
+
     LevelManager.Instance.RemoveBallFromFinish(ball);
 
 
-if(UIManager.Instance != null)
-{
-    UIManager.Instance.SetBallText(
-        LevelManager.Instance.GetBallCount()
-    );
-}
+
+    if(UIManager.Instance != null)
+    {
+        UIManager.Instance.SetBallText(
+            LevelManager.Instance.GetBallCount()
+        );
+    }
+
+
     ball.transform.SetParent(null);
 
 
@@ -238,7 +250,6 @@ if(UIManager.Instance != null)
         .SetEase(Ease.OutBack)
         .OnComplete(() =>
         {
-
             ball.transform.SetParent(targetPoint);
 
             ball.transform.position = targetPosition;
@@ -255,10 +266,13 @@ if(UIManager.Instance != null)
 
 
             finishedBalls++;
+
+
             if (ScoreManager.Instance != null)
-{
-    ScoreManager.Instance.AddScore(10);
-}
+            {
+                ScoreManager.Instance.AddScore(10);
+            }
+
 
 
             Debug.Log(
@@ -270,18 +284,34 @@ if(UIManager.Instance != null)
 
 
 
-if(finishedBalls >= ballsToSend.Count)
-{
-    Debug.Log("ALL FINISH BALLS ARRIVED");
+            // کوچک شدن و حذف توپ
+            ball.transform
+            .DOScale(Vector3.zero, 0.2f)
+            .SetEase(Ease.InBack);
 
-    LevelManager.Instance.RefreshStackPublic();
+            Destroy(ball.gameObject, 0.25f);
 
-    UIManager.Instance.SetBallText(
-        LevelManager.Instance.GetBallCount()
-    );
 
-    PlayFinishEffect();
-}
+
+            if(finishedBalls >= ballsToSend.Count)
+            {
+                Debug.Log("ALL FINISH BALLS ARRIVED");
+
+
+                LevelManager.Instance.RefreshStackPublic();
+
+
+                if(UIManager.Instance != null)
+                {
+                    UIManager.Instance.SetBallText(
+                        LevelManager.Instance.GetBallCount()
+                    );
+                }
+
+
+                PlayFinishEffect();
+            }
+
         });
 
 
@@ -290,9 +320,6 @@ if(finishedBalls >= ballsToSend.Count)
 
     sendingBall = false;
 }
-
-
-
     IEnumerator DisableTrail(TrailRenderer trail)
     {
         yield return new WaitForSeconds(
