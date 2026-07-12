@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: Collector.Co
+  companyName: Collector.ZeldaGame
   productName: Collector
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -157,6 +157,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
+    Android: com.Collector.ZeldaGame.Collector
     Standalone: com.DefaultCompany.New-Unity-Project
   buildNumber:
     Standalone: 0
@@ -164,8 +165,8 @@ PlayerSettings:
     tvOS: 0
   overrideDefaultApplicationIdentifier: 0
   AndroidBundleVersionCode: 1
-  AndroidMinSdkVersion: 22
-  AndroidTargetSdkVersion: 0
+  AndroidMinSdkVersion: 32
+  AndroidTargetSdkVersion: 32
   AndroidPreferredInstallLocation: 1
   aotOptions: 
   stripEngineCode: 1
@@ -243,10 +244,10 @@ PlayerSettings:
   templateDefaultScene: 
   useCustomMainManifest: 0
   useCustomLauncherManifest: 0
-  useCustomMainGradleTemplate: 0
-  useCustomLauncherGradleManifest: 0
+  useCustomMainGradleTemplate: 1
+  useCustomLauncherGradleManifest: 1
   useCustomBaseGradleTemplate: 1
-  useCustomGradlePropertiesTemplate: 0
+  useCustomGradlePropertiesTemplate: 1
   useCustomProguardFile: 0
   AndroidTargetArchitectures: 1
   AndroidTargetDevices: 0
@@ -338,32 +339,42 @@ PlayerSettings:
       m_SubKind: 
     - m_Textures:
       - {fileID: 2800000, guid: c50e52bbd5160c44093db18890dffcba, type: 3}
-      - {fileID: 2800000, guid: efe5ac2149d96904d8212142cad3c0c4, type: 3}
+      - {fileID: 2800000, guid: 26af84cfd0f8c384cbe87f1db1b6eedb, type: 3}
       m_Width: 432
       m_Height: 432
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: c50e52bbd5160c44093db18890dffcba, type: 3}
+      - {fileID: 2800000, guid: 26af84cfd0f8c384cbe87f1db1b6eedb, type: 3}
       m_Width: 324
       m_Height: 324
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: c50e52bbd5160c44093db18890dffcba, type: 3}
+      - {fileID: 2800000, guid: 26af84cfd0f8c384cbe87f1db1b6eedb, type: 3}
       m_Width: 216
       m_Height: 216
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: c50e52bbd5160c44093db18890dffcba, type: 3}
+      - {fileID: 2800000, guid: 26af84cfd0f8c384cbe87f1db1b6eedb, type: 3}
       m_Width: 162
       m_Height: 162
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: c50e52bbd5160c44093db18890dffcba, type: 3}
+      - {fileID: 2800000, guid: 26af84cfd0f8c384cbe87f1db1b6eedb, type: 3}
       m_Width: 108
       m_Height: 108
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: c50e52bbd5160c44093db18890dffcba, type: 3}
+      - {fileID: 2800000, guid: 26af84cfd0f8c384cbe87f1db1b6eedb, type: 3}
       m_Width: 81
       m_Height: 81
       m_Kind: 2

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<dependencies>
+  <androidPackages>
+    <androidPackage spec="ir.tapsell:tapsell-unity:1.4.0-alpha01" />
+    <androidPackage spec="androidx.lifecycle:lifecycle-process:2.6.1" />
+    <androidPackage spec="androidx.core:core-ktx:1.9.0" />
+    <androidPackage spec="ir.tapsell.mediation.adapter:legacy-unity:1.4.0-alpha01" />
+    <repositories>
+      <repository>https://maven.tapsell.ir/</repository>
+      <repository>https://maven.google.com/</repository>
+      <repository>https://repo1.maven.org/maven2/</repository>
+    </repositories>
+  </androidPackages>
+</dependencies>

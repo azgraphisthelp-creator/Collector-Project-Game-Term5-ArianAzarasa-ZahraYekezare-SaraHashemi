@@ -1,0 +1,16 @@
+{
+    "mediationAppKey": "6a52c92f372b4b5b374d8686",
+    "legacyEnabled": true,
+    "admobEnabled": false,
+    "admobSignature": "",
+    "applovinEnabled": false,
+    "chartboostEnabled": false,
+    "fyberEnabled": false,
+    "ironSourceEnabled": false,
+    "liftoffEnabled": false,
+    "mintegralEnabled": false,
+    "unityadsEnabled": false,
+    "wortiseEnabled": false,
+    "yandexEnabled": false,
+    "manifestMetaRemoved": true
+}

@@ -5,6 +5,16 @@ using UnityEngine.EventSystems;
 using System.Collections;
 public class UIManager : MonoBehaviour
 {
+    [Header("Progress Animation")]
+[SerializeField] private float progressSmoothSpeed = 3f;
+
+private float targetProgress;
+    [Header("Finish UI")]
+[SerializeField] private GameObject swipeUpPanel;
+    [Header("Finish Panel")]
+[SerializeField] private UIPanelAnimator finishPanel;
+[SerializeField] private TMP_Text finalScoreText;
+[SerializeField] private TMP_Text highScoreText;
     public static UIManager Instance;
 
     [Header("Texts")]
@@ -28,14 +38,13 @@ private void Update()
     if (Input.GetKeyDown(KeyCode.Escape))
     {
         if (!isPaused)
-        {
             PauseGame();
-        }
         else
-        {
             ResumeGame();
-        }
     }
+
+
+    AnimateProgress();
 }
     private void Awake()
     {
@@ -47,7 +56,11 @@ private void Update()
 
         Instance = this;
     }
-
+private void Start()
+{
+    if(finishPanel != null)
+        finishPanel.Hide();
+}
 
     public void SetBallText(int count)
     {
@@ -61,11 +74,10 @@ private void Update()
             levelText.text = "Level " + level;
     }
 
-    public void UpdateProgress(float value)
-    {
-        if (progressSlider != null)
-            progressSlider.value = value;
-    }
+public void UpdateProgress(float value)
+{
+    targetProgress = Mathf.Clamp01(value);
+}
 
    
     public bool CanInput()
@@ -134,16 +146,73 @@ private void Update()
     StartCoroutine(QuitRoutine());
 }
 
-private IEnumerator QuitRoutine()
-{
-    yield return new WaitForSecondsRealtime(0.15f);
+    private IEnumerator QuitRoutine()
+    {
+        yield return new WaitForSecondsRealtime(0.15f);
 
-    Time.timeScale = 1f;
+        Time.timeScale = 1f;
 
 #if UNITY_EDITOR
     UnityEditor.EditorApplication.isPlaying = false;
 #else
-    Application.Quit();
+        Application.Quit();
 #endif
+    }
+
+    public void ShowFinishPanel()
+    {
+        Time.timeScale = 1f;
+
+        Debug.Log("SHOW FINISH PANEL");
+
+
+        if (finishPanel == null)
+        {
+            Debug.LogError("FINISH PANEL IS EMPTY");
+            return;
+        }
+
+
+        finishPanel.Show();
+
+
+        int score = ScoreManager.Instance.GetScore();
+
+        int highScore = ScoreManager.Instance.GetHighScore();
+
+        if (finalScoreText != null)
+            finalScoreText.text = "Score : " + score;
+
+
+        if (highScoreText != null)
+            highScoreText.text = "High Score : " + highScore;
+    }
+    public GameObject GetSwipePanel()
+    {
+        return swipeUpPanel;
+    }
+public void ShowSwipePanel()
+{
+    if (swipeUpPanel != null)
+        swipeUpPanel.SetActive(true);
+}
+
+
+    public void HideSwipePanel()
+    {
+        if (swipeUpPanel != null)
+            swipeUpPanel.SetActive(false);
+    }
+private void AnimateProgress()
+{
+    if(progressSlider == null)
+        return;
+
+
+    progressSlider.value = Mathf.MoveTowards(
+    progressSlider.value,
+    targetProgress,
+    Time.deltaTime * progressSmoothSpeed
+);
 }
 }

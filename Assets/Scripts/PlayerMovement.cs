@@ -9,9 +9,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float horizontalSpeed = 10f;
     [SerializeField] private float horizontalLimit = 3f;
 
-    [Header("Level Progress")]
-    [SerializeField] private Transform startPoint;
-    [SerializeField] private Transform finishPoint;
 
     [Header("Start Game")]
     [SerializeField] private GameObject swipeUI;
@@ -50,7 +47,6 @@ public class PlayerMovement : MonoBehaviour
             return;
 
         MoveForward();
-        UpdateProgress();
     }
 
     private void MoveForward()
@@ -159,17 +155,8 @@ public class PlayerMovement : MonoBehaviour
             animator.SetBool("IsRunning", true);
     }
 
-    private void UpdateProgress()
-    {
-        if (startPoint == null || finishPoint == null)
-            return;
-
-        float distanceTravelled = transform.position.z - startPoint.position.z;
-        float totalDistance = finishPoint.position.z - startPoint.position.z;
-
-        float progress = Mathf.Clamp01(distanceTravelled / totalDistance);
-
-        if (UIManager.Instance != null)
-            UIManager.Instance.UpdateProgress(progress);
-    }
+        public float GetForwardSpeed()
+{
+    return forwardSpeed;
+}
 }

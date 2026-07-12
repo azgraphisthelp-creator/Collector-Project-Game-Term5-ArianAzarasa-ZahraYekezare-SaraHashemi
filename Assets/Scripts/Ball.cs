@@ -2,95 +2,225 @@ using UnityEngine;
 
 public class Ball : MonoBehaviour
 {
+    public bool InFinishMode { get; private set; }
     public bool IsCollected { get; set; }
+
 
     private Rigidbody rb;
     private Renderer rend;
 
     private int stackIndex;
 
+
+    [Header("Stack Movement")]
+    [SerializeField] private float stackMoveSpeed = 18f;
+    [SerializeField] private float rotationDamping = 10f;
+
+
+    [Header("Deposit Movement")]
+    [SerializeField] private float depositSpeed = 15f;
+
+
     private bool isDepositing;
     private Vector3 depositTarget;
 
     private bool arrived;
 
+
+    private Collider col;
+
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        col = GetComponent<Collider>();
+
         rend = GetComponentInChildren<Renderer>();
 
         SetRandomColor();
     }
 
+
+
     private void SetRandomColor()
     {
-        if (rend == null) return;
+        if (rend == null)
+            return;
 
         rend.material.color = Random.ColorHSV();
     }
+
+
 
     public void SetStackIndex(int index)
     {
         stackIndex = index;
     }
 
+
+
+    // وقتی توپ وارد صف بازیکن می‌شود
+    public void EnterStackMode()
+    {
+        IsCollected = true;
+
+        isDepositing = false;
+
+
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+
+        rb.useGravity = false;
+        rb.isKinematic = true;
+
+
+        if(col != null)
+            col.enabled = false;
+    }
+
+
+
+    // شروع حرکت به سمت گیت
     public void GoToDeposit(Vector3 target)
     {
         isDepositing = true;
+
         depositTarget = target;
 
         IsCollected = false;
+
         arrived = false;
 
-        if (rb != null)
-        {
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.useGravity = false;
-        }
+
+        rb.isKinematic = false;
+
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+
+        rb.useGravity = false;
+
+
+        if(col != null)
+            col.enabled = true;
     }
 
- private void FixedUpdate()
-{
-    if (rb == null) return;
 
-    if (isDepositing)
+
+    private void FixedUpdate()
     {
-        Vector3 dir = depositTarget - rb.position;
-        float dist = dir.magnitude;
+        if(rb == null)
+            return;
 
-        float force = dist < 1.5f ? 10f : 20f;
 
-        rb.AddForce(dir.normalized * force, ForceMode.Acceleration);
+        if(InFinishMode)
+            return;
 
-        if (rb.velocity.magnitude > 10f)
-            rb.velocity = rb.velocity.normalized * 10f;
 
-        if (dist < 0.4f && !arrived)
+
+        // حرکت به سمت Deposit
+        if(isDepositing)
         {
-            arrived = true;
-            isDepositing = false;
 
-            rb.position = depositTarget;
+            float dist =
+                Vector3.Distance(
+                    rb.position,
+                    depositTarget
+                );
 
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.useGravity = true;
 
-            LevelManager.Instance.BallDeposited(this);
+            if(dist < 0.5f && !arrived)
+            {
+                arrived = true;
+
+                isDepositing = false;
+
+
+                rb.position = depositTarget;
+
+
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+
+
+                rb.useGravity = true;
+
+
+                LevelManager.Instance.BallDeposited(this);
+
+
+                return;
+            }
+
+
+
+            rb.MovePosition(
+                Vector3.MoveTowards(
+                    rb.position,
+                    depositTarget,
+                    depositSpeed * Time.fixedDeltaTime
+                )
+            );
+
+
+            return;
         }
 
-        return;
+
+
+
+
+        // حرکت نرم در Stack
+        if(IsCollected)
+        {
+
+            Vector3 target =
+                LevelManager.Instance.GetBallPosition(stackIndex);
+
+
+
+            transform.position =
+                Vector3.Lerp(
+                    transform.position,
+                    target,
+                    Time.fixedDeltaTime * stackMoveSpeed
+                );
+
+
+
+            transform.rotation =
+                Quaternion.Lerp(
+                    transform.rotation,
+                    Quaternion.identity,
+                    Time.fixedDeltaTime * rotationDamping
+                );
+
+        }
+
     }
 
-    if (!IsCollected) return;
 
-    Vector3 target = LevelManager.Instance.GetBallPosition(stackIndex);
-    Vector3 dir2 = target - rb.position;
 
-    rb.AddForce(dir2 * 40f, ForceMode.Acceleration);
+    public void EnterFinishMode()
+    {
+        InFinishMode = true;
 
-    if (rb.velocity.magnitude > 8f)
-        rb.velocity = rb.velocity.normalized * 8f;
-}
+
+        IsCollected = false;
+
+        isDepositing = false;
+
+
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+
+        rb.isKinematic = true;
+        rb.useGravity = false;
+
+
+        if(col != null)
+            col.enabled = false;
+    }
 }

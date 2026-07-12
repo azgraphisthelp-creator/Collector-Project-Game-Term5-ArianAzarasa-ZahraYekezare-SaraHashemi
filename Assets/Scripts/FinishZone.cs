@@ -5,17 +5,21 @@ using DG.Tweening;
 
 public class FinishZone : MonoBehaviour
 {
+    private bool sendingBall;
     [Header("UI")]
-    [SerializeField] private GameObject swipeUpPanel;
+
 
     [Header("Ball Target")]
     [SerializeField] private Transform targetPoint;
 
+
     [Header("Input")]
     [SerializeField] private float swipeDistance = 100f;
 
+
     [Header("Send Settings")]
     [SerializeField] private float sendDelay = 0.08f;
+
 
     [Header("Trail Settings")]
     [SerializeField] private float trailDisableDelay = 0.3f;
@@ -26,14 +30,19 @@ public class FinishZone : MonoBehaviour
     [SerializeField] private AudioClip fireworkSound;
 
 
+
     private Vector2 startTouch;
+
 
     private bool playerReached;
     private bool finishPlayed;
 
+
     private int finishedBalls = 0;
 
+
     private List<Ball> ballsToSend;
+
     private int currentBallIndex = 0;
 
 
@@ -44,17 +53,28 @@ public class FinishZone : MonoBehaviour
             return;
 
 
+        if (playerReached)
+            return;
+
+
         playerReached = true;
 
 
-        if (swipeUpPanel != null)
-            swipeUpPanel.SetActive(true);
+
+        if(UIManager.Instance != null)
+{
+    UIManager.Instance.ShowSwipePanel();
+}
 
 
-        PlayerMovement movement = other.GetComponent<PlayerMovement>();
+
+        PlayerMovement movement =
+            other.GetComponent<PlayerMovement>();
+
 
         if (movement != null)
             movement.StopMovement();
+
 
 
 
@@ -62,9 +82,25 @@ public class FinishZone : MonoBehaviour
             LevelManager.Instance.collectedBalls
         );
 
+Debug.Log(
+    "BEFORE FINISH REMOVE = "
+    + LevelManager.Instance.collectedBalls.Count
+);
 
-        Debug.Log("Finish Reached");
+        Debug.Log(
+            "FINISH REACHED - BALL COUNT : "
+            + ballsToSend.Count
+        );
+
+
+
+        if (ballsToSend.Count == 0)
+        {
+            PlayFinishEffect();
+        }
     }
+
+
 
 
 
@@ -82,15 +118,17 @@ public class FinishZone : MonoBehaviour
             Touch touch = Input.GetTouch(0);
 
 
-            if(touch.phase == TouchPhase.Began)
+
+            if (touch.phase == TouchPhase.Began)
             {
                 startTouch = touch.position;
             }
 
 
-            if(touch.phase == TouchPhase.Ended)
+
+            if (touch.phase == TouchPhase.Ended)
             {
-                if(touch.position.y - startTouch.y > swipeDistance)
+                if (touch.position.y - startTouch.y > swipeDistance)
                 {
                     SendBall();
                 }
@@ -101,7 +139,7 @@ public class FinishZone : MonoBehaviour
 
 #if UNITY_EDITOR
 
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             SendBall();
         }
@@ -113,185 +151,200 @@ public class FinishZone : MonoBehaviour
 
 
 
-    private void SendBall()
-    {
-        if (swipeUpPanel != null)
-            swipeUpPanel.SetActive(false);
+
+private void SendBall()
+{
+    if (sendingBall)
+        return;
+
+
+    if (ballsToSend == null)
+        return;
+
+
+    if (currentBallIndex >= ballsToSend.Count)
+        return;
+
+
+    
+
+
+    sendingBall = true;
+
+
+    StartCoroutine(SendBallRoutine());
+}
+
+IEnumerator SendBallRoutine()
+{
+    if(currentBallIndex >= ballsToSend.Count)
+        yield break;
+    int index = currentBallIndex;
+    currentBallIndex++;
+
+
+    Ball ball = ballsToSend[index];
+
+
+    if (ball == null)
+{
+    sendingBall = false;
+    yield break;
+}
 
 
 
-        if(ballsToSend == null)
-            return;
+    ball.EnterFinishMode();
+    LevelManager.Instance.RemoveBallFromFinish(ball);
 
 
-        if(currentBallIndex >= ballsToSend.Count)
-            return;
-
-
-
-        StartCoroutine(SendBallRoutine());
-
-
-        currentBallIndex++;
-    }
+if(UIManager.Instance != null)
+{
+    UIManager.Instance.SetBallText(
+        LevelManager.Instance.GetBallCount()
+    );
+}
+    ball.transform.SetParent(null);
 
 
 
-
-
-
-
-    IEnumerator SendBallRoutine()
-    {
-        int index = currentBallIndex;
-
-
-        Ball ball = ballsToSend[index];
-
-
-        if(ball == null)
-            yield break;
-
-
-
-        LevelManager.Instance.collectedBalls.Remove(ball);
-
-
-        ScoreManager.Instance.AddScore(10);
-
-
-
-        UIManager.Instance.SetBallText(
-            LevelManager.Instance.collectedBalls.Count
+    Vector3 targetPosition =
+        targetPoint.position +
+        new Vector3(
+            (index % 3 - 1) * 0.7f,
+            0,
+            -(index / 3) * 0.7f
         );
 
 
 
-        Vector3 targetPosition =
-            targetPoint.position +
-            new Vector3(
-                (index % 3 - 1) * 0.7f,
-                0,
-                -(index / 3) * 0.7f
+    TrailRenderer trail =
+        ball.GetComponent<TrailRenderer>();
+
+
+    if(trail != null)
+    {
+        trail.Clear();
+        trail.enabled = true;
+    }
+
+
+
+    ball.transform
+        .DOMove(
+            targetPosition,
+            0.5f
+        )
+        .SetEase(Ease.OutBack)
+        .OnComplete(() =>
+        {
+
+            ball.transform.SetParent(targetPoint);
+
+            ball.transform.position = targetPosition;
+
+
+
+            if(trail != null)
+            {
+                StartCoroutine(
+                    DisableTrail(trail)
+                );
+            }
+
+
+
+            finishedBalls++;
+            if (ScoreManager.Instance != null)
+{
+    ScoreManager.Instance.AddScore(10);
+}
+
+
+            Debug.Log(
+                "FINISHED BALL : "
+                + finishedBalls
+                + "/" 
+                + ballsToSend.Count
             );
 
 
 
-        ball.transform.SetParent(null);
+if(finishedBalls >= ballsToSend.Count)
+{
+    Debug.Log("ALL FINISH BALLS ARRIVED");
+
+    LevelManager.Instance.RefreshStackPublic();
+
+    UIManager.Instance.SetBallText(
+        LevelManager.Instance.GetBallCount()
+    );
+
+    PlayFinishEffect();
+}
+        });
 
 
 
-        Rigidbody rb = ball.GetComponent<Rigidbody>();
+    yield return null;
 
-        if(rb != null)
-        {
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.isKinematic = true;
-        }
-
-
-
-
-
-        TrailRenderer trail = ball.GetComponent<TrailRenderer>();
-
-        if(trail != null)
-        {
-            trail.Clear();
-            trail.enabled = true;
-        }
-
-
-
-
-
-        ball.transform
-            .DOMove(targetPosition,0.5f)
-            .SetEase(Ease.OutBack)
-            .OnComplete(() =>
-            {
-
-                ball.transform.SetParent(targetPoint);
-                ball.transform.position = targetPosition;
-
-
-
-                if(trail != null)
-                {
-                    StartCoroutine(DisableTrail(trail));
-                }
-
-
-
-                finishedBalls++;
-
-
-
-                if(finishedBalls >= ballsToSend.Count)
-                {
-                    PlayFinishEffect();
-                }
-
-            });
-
-
-
-
-        yield return new WaitForSeconds(sendDelay);
-
-
-
-        LevelManager.Instance.RefreshStackPublic();
-    }
-
-
-
-
-
-
-
-
-    private void PlayFinishEffect()
-    {
-        if(finishPlayed)
-            return;
-
-
-        finishPlayed = true;
-
-
-
-        Debug.Log("🎆 FIREWORK COMPLETE");
-
-
-
-        if(fireworkFX != null)
-        {
-            fireworkFX.transform.position = targetPoint.position;
-            fireworkFX.Play();
-        }
-
-
-
-        if(audioSource != null && fireworkSound != null)
-        {
-            audioSource.PlayOneShot(fireworkSound);
-        }
-    }
-
-
-
-
+    sendingBall = false;
+}
 
 
 
     IEnumerator DisableTrail(TrailRenderer trail)
     {
-        yield return new WaitForSeconds(trailDisableDelay);
+        yield return new WaitForSeconds(
+            trailDisableDelay
+        );
 
 
         trail.Clear();
+
         trail.enabled = false;
     }
+    
+private void PlayFinishEffect()
+{
+    if (finishPlayed)
+        return;
+
+    finishPlayed = true;
+
+    Debug.Log("🎆 FINISH COMPLETE");
+
+
+    if (fireworkFX != null)
+    {
+        fireworkFX.transform.position = targetPoint.position;
+        fireworkFX.Play();
+    }
+
+
+    if (audioSource != null && fireworkSound != null)
+    {
+        audioSource.PlayOneShot(fireworkSound);
+    }
+
+
+    StartCoroutine(ShowPanelDelay());
+}
+
+
+
+private IEnumerator ShowPanelDelay()
+{
+    yield return new WaitForSeconds(2f);
+
+    ShowEndPanel();
+}
+private void ShowEndPanel()
+{
+    if (UIManager.Instance != null)
+    {
+        UIManager.Instance.ShowFinishPanel();
+    }
+}
+
 }

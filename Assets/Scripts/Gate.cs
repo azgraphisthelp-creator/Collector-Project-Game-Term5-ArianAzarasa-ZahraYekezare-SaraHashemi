@@ -1,64 +1,67 @@
 using UnityEngine;
 using TMPro;
-using DG.Tweening;
 
 public class Gate : MonoBehaviour
 {
+    private bool progressStarted;
+    [Header("Progress")]
+public Transform progressStart;
+public Transform progressEnd;
     [Header("Gate Settings")]
-    public int requiredBalls = 3;
-
+private int requiredBalls;
     [Header("Spawn Settings")]
-    public Transform spawnCenter;
-    public Vector3 spawnSize = new Vector3(15f, 0f, 30f);
-    public int spawnCount = 20;
+    public Collider spawnArea;
+
 
     [Header("Deposit")]
     public Transform depositPoint;
 
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI text;
-    [SerializeField] private Transform textTransform;
 
     [Header("Effects")]
     [SerializeField] private ParticleSystem confettiFX;
 
-    [HideInInspector] public LevelManager spawner;
+    [HideInInspector]
+    public LevelManager spawner;
 
-    private int currentProgress = 0;
-    private bool activated = false;
+    private int currentProgress;
+    private bool activated;
 
+  public void Setup(int required, Transform deposit)
+{
+    requiredBalls = required;
+    depositPoint = deposit;
 
-    public void Setup(int required, int spawn, Transform center, Transform deposit)
-    {
-        requiredBalls = required;
-        spawnCount = spawn;
-        spawnCenter = center;
-        depositPoint = deposit;
+    currentProgress = 0;
+    activated = false;
 
-        currentProgress = 0;
-        activated = false;
-
-        UpdateText();
-    }
-
+    UpdateText();
+}
 
     public void AddProgress()
     {
-        currentProgress = Mathf.Min(currentProgress + 1, requiredBalls);
-        UpdateText();
+        if (currentProgress >= requiredBalls)
+            return;
 
-        if (textTransform != null)
-        {
-            textTransform.DOKill();
-            textTransform.localScale = Vector3.one;
-            textTransform.DOPunchScale(Vector3.one * 0.25f, 0.25f, 10, 1f);
-        }
+        currentProgress++;
+
+        Debug.Log($"CURRENT GATE TEXT = {currentProgress} / {requiredBalls}");
+
+        UpdateText();
     }
 
     private void UpdateText()
     {
-        if (text != null)
-            text.text = $"{currentProgress} / {requiredBalls}";
+        if (text == null)
+        {
+            Debug.LogError($"TEXT IS NULL ON {name}");
+            return;
+        }
+
+        text.text = $"{currentProgress} / {requiredBalls}";
+
+        Debug.Log("TEXT UPDATED => " + text.text);
     }
 
     private void LateUpdate()
@@ -67,37 +70,38 @@ public class Gate : MonoBehaviour
             text.transform.forward = Camera.main.transform.forward;
     }
 
+  public Vector3 GetRandomSpawnPoint()
+{
+    if (spawnArea == null)
+        return transform.position;
 
-    public Vector3 GetRandomSpawnPoint()
-    {
-        if (spawnCenter == null)
-            return transform.position;
+    Bounds bounds = spawnArea.bounds;
 
-        Vector3 c = spawnCenter.position;
-
-        return new Vector3(
-            c.x + Random.Range(-spawnSize.x * 0.5f, spawnSize.x * 0.5f),
-            c.y,
-            c.z + Random.Range(-spawnSize.z * 0.5f, spawnSize.z * 0.5f)
-        );
-    }
-
-
+    return new Vector3(
+        Random.Range(bounds.min.x, bounds.max.x),
+        bounds.center.y,
+        Random.Range(bounds.min.z, bounds.max.z)
+    );
+}
     private void OnTriggerEnter(Collider other)
     {
-        if (activated) return;
-        if (!other.CompareTag("Player")) return;
+        if (activated)
+            return;
 
-        activated = true;
+        if (!other.CompareTag("Player"))
+            return;
 
         if (LevelManager.Instance == null)
             return;
 
         if (LevelManager.Instance.GetBallCount() < requiredBalls)
         {
+            activated = true;
             LevelManager.Instance.LoseFromGate();
             return;
         }
+
+        activated = true;
 
         if (confettiFX != null && depositPoint != null)
         {
@@ -105,9 +109,10 @@ public class Gate : MonoBehaviour
             confettiFX.Play();
         }
 
-        LevelManager.Instance.StartGate(requiredBalls, depositPoint);
+        LevelManager.Instance.SetCurrentGate(this);
 
-        if (spawner != null)
-            spawner.GatePassed(this);
+        LevelManager.Instance.StartGate(requiredBalls, depositPoint);
     }
+
+
 }
